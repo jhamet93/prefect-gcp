@@ -189,6 +189,11 @@ class VertexAICustomTrainingJob(Infrastructure):
         ),
     )
 
+    scheduling: Optional[Scheduling] = Field(
+        default=None,
+        description="The scheduling and queueing configuration for the job."
+    )
+
     @property
     def job_name(self):
         """
@@ -256,11 +261,12 @@ class VertexAICustomTrainingJob(Infrastructure):
 
         # build custom job specs
         timeout = Duration().FromTimedelta(td=self.maximum_run_time)
-        scheduling = Scheduling(timeout=timeout)
+        if not self.scheduling:
+            self.scheduling = Scheduling(timeout=timeout)
         job_spec = CustomJobSpec(
             worker_pool_specs=[worker_pool_spec],
             service_account=service_account,
-            scheduling=scheduling,
+            scheduling=self.scheduling,
             network=self.network,
             reserved_ip_ranges=self.reserved_ip_ranges,
         )
